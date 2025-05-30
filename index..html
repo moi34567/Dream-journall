@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal de Rêves</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 1rem;
+      background-color: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      margin-top: 1rem;
+      margin-right: 0.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background-color: #1e1e1e;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      position: relative;
+    }
+    .date {
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="authContainer">
+    <h2>🔒 Accès sécurisé</h2>
+    <input type="password" id="passwordInput" placeholder="Mot de passe" />
+    <button onclick="checkPassword()">Connexion</button>
+  </div>
+
+  <div id="mainApp" style="display: none;">
+    <h1>🌙 Mon Journal de Rêves</h1>
+    <textarea id="dreamInput" placeholder="Écris ton rêve ici..."></textarea><br />
+    <label>
+      <input type="checkbox" id="lucidCheckbox" /> 🌟 C'était un rêve lucide
+    </label><br />
+    <button onclick="saveDream()">💾 Sauvegarder</button>
+    <button onclick="exportDreams()">📥 Exporter en fichier texte</button>
+    <button onclick="confirmDeleteAll()">🗑️ Supprimer tous les rêves</button>
+    <h2>Mes Rêves</h2>
+    <label for="filterSelect">🔍 Filtrer :</label>
+    <select id="filterSelect" onchange="loadDreams()">
+      <option value="all">Tous</option>
+      <option value="lucid">Lucides seulement</option>
+      <option value="non-lucid">Non lucides</option>
+    </select>
+    <ul id="dreamList"></ul>
+  </div>
+
+  <script>
+    const PASSWORD = "rceavleine1234";
+    const dreamInput = document.getElementById("dreamInput");
+    const lucidCheckbox = document.getElementById("lucidCheckbox");
+    const dreamList = document.getElementById("dreamList");
+    const filterSelect = document.getElementById("filterSelect");
+
+    function checkPassword() {
+      const input = document.getElementById("passwordInput").value;
+      if (input === PASSWORD) {
+        document.getElementById("authContainer").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        loadDreams();
+      } else {
+        alert("Mot de passe incorrect.");
+      }
+    }
+
+    function saveDream() {
+      const text = dreamInput.value.trim();
+      const isLucid = lucidCheckbox.checked;
+      if (!text) return;
+      const date = new Date().toLocaleString();
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      dreams.unshift({ text, date, lucid: isLucid });
+      localStorage.setItem("dreams", JSON.stringify(dreams));
+      dreamInput.value = "";
+      lucidCheckbox.checked = false;
+      loadDreams();
+    }
+
+    function loadDreams() {
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      const filter = filterSelect.value;
+      dreamList.innerHTML = "";
+      dreams.forEach((dream, index) => {
+        if (
+          filter === "lucid" && !dream.lucid ||
+          filter === "non-lucid" && dream.lucid
+        ) {
+          return;
+        }
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div>${dream.text}</div>
+          <div class='date'>${dream.date}${dream.lucid ? " 🌟 Rêve lucide" : ""}</div>
+          <button class='delete-btn' onclick='deleteDream(${index})'>Supprimer</button>
+        `;
+        dreamList.appendChild(li);
+      });
+    }
+
+    function deleteDream(index) {
+      if (!confirm("Tu es sûr de vouloir supprimer ce rêve ?")) return;
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      dreams.splice(index, 1);
+      localStorage.setItem("dreams", JSON.stringify(dreams));
+      loadDreams();
+    }
+
+    function confirmDeleteAll() {
+      if (!confirm("Supprimer TOUS les rêves ? Cette action est irréversible.")) return;
+      localStorage.removeItem("dreams");
+      loadDreams();
+    }
+
+    function exportDreams() {
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      if (dreams.length === 0) {
+        alert("Aucun rêve à exporter !");
+        return;
+      }
+      let content = "Journal de Rêves \n\n";
+      dreams.forEach((dream, index) => {
+        content += `Rêve #${dreams.length - index}\nDate : ${dream.date}${dream.lucid ? " (Lucide)" : ""}\n${dream.text}\n\n`;
+      });
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "journal_de_reves.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
