@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Journal de Rêves</title>
   <style>
     body {
@@ -28,6 +28,7 @@
       border-radius: 8px;
       box-sizing: border-box;
       resize: vertical;
+      font-size: 1rem;
     }
 
     .icon-btn {
@@ -38,6 +39,8 @@
       cursor: pointer;
       opacity: 0.6;
       transition: opacity 0.3s;
+      fill: #ccc;
+      stroke: #ccc;
     }
 
     .icon-btn:hover {
@@ -112,6 +115,8 @@
       cursor: pointer;
       float: right;
       margin-top: 0.5rem;
+      clear: both;
+      display: inline-block;
     }
   </style>
 </head>
@@ -129,13 +134,13 @@
       <textarea id="dreamInput" placeholder="Écris ton rêve ici..."></textarea>
 
       <!-- Croix SVG -->
-      <svg class="icon-btn clear-icon" onclick="clearText()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ccc">
-        <path d="M18 6L6 18M6 6l12 12" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg class="icon-btn clear-icon" onclick="clearText()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" >
+        <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
 
       <!-- Micro SVG -->
-      <svg class="icon-btn micro-icon" onclick="startDictation()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ccc">
-        <path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3zm5 10a5 5 0 01-10 0H5a7 7 0 0014 0h-2zm-5 10v-3" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg class="icon-btn micro-icon" onclick="startDictation()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3zm5 10a5 5 0 01-10 0H5a7 7 0 0014 0h-2zm-5 10v-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
 
@@ -244,33 +249,38 @@
     }
 
     function startDictation() {
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'fr-FR';
-  recognition.interimResults = true;
-  recognition.continuous = false;
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'fr-FR';
+      recognition.interimResults = true;
+      recognition.continuous = false;
 
-  let finalTranscript = "";
+      let finalTranscript = dreamInput.value;
 
-  recognition.onresult = function (event) {
-    let interimTranscript = "";
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      const result = event.results[i];
-      if (result.isFinal) {
-        finalTranscript += result[0].transcript + " ";
-      } else {
-        interimTranscript += result[0].transcript;
-      }
+      recognition.onresult = function (event) {
+        let interimTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += (finalTranscript && !finalTranscript.endsWith(" ") ? " " : "") + result[0].transcript;
+          } else {
+            interimTranscript += result[0].transcript;
+          }
+        }
+
+        dreamInput.value = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
+      };
+
+      recognition.onend = function () {
+        dreamInput.value = finalTranscript.trim();
+      };
+
+      recognition.onerror = function (event) {
+        alert("Erreur de reconnaissance vocale : " + event.error);
+      };
+
+      recognition.start();
     }
-    dreamInput.value = (dreamInput.value.trim() ? dreamInput.value.trim() + " " : "") + finalTranscript + interimTranscript;
-  };
-
-  recognition.onerror = function (event) {
-    alert("Erreur de reconnaissance vocale : " + event.error);
-  };
-
-  recognition.start();
-}
-
   </script>
 </body>
 </html>
