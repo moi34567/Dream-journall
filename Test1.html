@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal de Rêves</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 1rem;
+      background-color: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+      position: relative;
+    }
+    /* Conteneur du textarea et boutons */
+    .textarea-container {
+      position: relative;
+    }
+    /* Boutons micro et effacer en bas à droite */
+    #micButton, #clearButton {
+      position: absolute;
+      bottom: 12px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 8px #4caf50;
+      background-color: #4caf50;
+      transition: background-color 0.3s;
+    }
+    #micButton.recording {
+      background-color: #e74c3c;
+      box-shadow: 0 0 12px #e74c3c;
+    }
+    #micButton {
+      right: 12px;
+    }
+    #clearButton {
+      right: 60px; /* à gauche du micro */
+      background-color: #666;
+      box-shadow: 0 0 8px #666;
+    }
+    /* Hover pour tous les boutons */
+    button:hover {
+      background-color: #888 !important;
+      box-shadow: 0 0 12px #888 !important;
+    }
+    /* On remet le rouge du micro en enregistrement au hover */
+    #micButton.recording:hover {
+      background-color: #ff4c4c !important;
+      box-shadow: 0 0 14px #ff4c4c !important;
+    }
+    /* SVG des icônes */
+    #micButton svg, #clearButton svg {
+      fill: white;
+      width: 20px;
+      height: 20px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      margin-top: 1rem;
+      margin-right: 0.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background-color: #1e1e1e;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      position: relative;
+    }
+    .date {
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background-color: #ff4c4c;
+    }
+  </style>
+</head>
+<body>
+  <div id="authContainer">
+    <h2>🔒 Accès sécurisé</h2>
+    <input type="password" id="passwordInput" placeholder="Mot de passe" />
+    <button onclick="checkPassword()">Connexion</button>
+  </div>
+
+  <div id="mainApp" style="display: none;">
+    <h1>🌙 Mon Journal de Rêves</h1>
+    <div class="textarea-container">
+      <textarea id="dreamInput" placeholder="Écris ton rêve ici..."></textarea>
+      <button id="clearButton" title="Effacer tout" aria-label="Effacer tout">
+        <svg viewBox="0 0 24 24"><path d="M18 6 L6 18 M6 6 L18 18" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button id="micButton" title="Démarrer la dictée vocale" aria-label="Démarrer la dictée vocale">
+        <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM19 10v1a7 7 0 0 1-14 0v-1"/></svg>
+      </button>
+    </div>
+    <label>
+      <input type="checkbox" id="lucidCheckbox" /> 🌟 C'était un rêve lucide
+    </label><br />
+    <button onclick="saveDream()">💾 Sauvegarder</button>
+    <button onclick="exportDreams()">📥 Exporter en fichier texte</button>
+    <button onclick="confirmDeleteAll()">🗑️ Supprimer tous les rêves</button>
+    <h2>Mes Rêves</h2>
+    <label for="filterSelect">🔍 Filtrer :</label>
+    <select id="filterSelect" onchange="loadDreams()">
+      <option value="all">Tous</option>
+      <option value="lucid">Lucides seulement</option>
+      <option value="non-lucid">Non lucides</option>
+    </select>
+    <ul id="dreamList"></ul>
+  </div>
+
+  <script>
+    const PASSWORD = "rceavleine1234";
+    
+    const dreamInput = document.getElementById("dreamInput");
+    const lucidCheckbox = document.getElementById("lucidCheckbox");
+    const dreamList = document.getElementById("dreamList");
+    const filterSelect = document.getElementById("filterSelect");
+    const micButton = document.getElementById("micButton");
+    const clearButton = document.getElementById("clearButton");
+
+    function checkPassword() {
+      const input = document.getElementById("passwordInput").value;
+      if (input === PASSWORD) {
+        document.getElementById("authContainer").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        loadDreams();
+      } else {
+        alert("Mot de passe incorrect.");
+      }
+    }
+
+    // === Dictée vocale ===
+    let recognition;
+    let isRecording = false;
+
+    function setupRecognition() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("La reconnaissance vocale n'est pas supportée par ce navigateur.");
+        micButton.disabled = true;
+        return;
+      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'fr-FR';
+      recognition.interimResults = true; // On veut afficher le texte au fur et à mesure
+      recognition.continuous = true; // Pour écouter en continu tant que tu parles
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = dreamInput.value; // texte déjà dans le textarea
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        // Afficher le texte final + texte en cours
+        dreamInput.value = finalTranscript + interimTranscript;
+        // Garde le curseur à la fin
+        dreamInput.selectionStart = dreamInput.selectionEnd = dreamInput.value.length;
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          alert("Permission microphone refusée. Active ton micro pour utiliser la dictée.");
+        } else {
+          console.error("Erreur reconnaissance vocale : ", event.error);
+        }
+      };
+
+      recognition.onend = () => {
+        // Si on était en enregistrement, on remet le bouton en vert
+        if (isRecording) {
+          toggleRecording(); // On relance la reconnaissance automatiquement (auto-restart)
+        }
+      };
+    }
+
+    function toggleRecording() {
+      if (!recognition) return;
+      if (isRecording) {
+        recognition.stop();
+        micButton.classList.remove('recording');
+        micButton.title = "Démarrer la dictée vocale";
+        isRecording = false;
+      } else {
+        recognition.start();
+        micButton.classList.add('recording');
+        micButton.title = "Arrêter la dictée vocale";
+        isRecording = true;
+      }
+    }
+
+    micButton.addEventListener('click', toggleRecording);
+
+    // Effacer tout le texte
+    clearButton.addEventListener('click', () => {
+      if (isRecording) toggleRecording(); // arrêter dictée si active
+      dreamInput.value = '';
+    });
+
+    // Initialise reconnaissance vocale au chargement
+    setupRecognition();
+
+    // === Sauvegarde des rêves et gestion (inchangée) ===
+    function saveDream() {
+      const text = dreamInput.value.trim();
+      const isLucid = lucidCheckbox.checked;
+      if (!text) return;
+      const date = new Date().toLocaleString();
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      dreams.unshift({ text, date, lucid: isLucid });
+      localStorage.setItem("dreams", JSON.stringify(dreams));
+      dreamInput.value = "";
+      lucidCheckbox.checked = false;
+      loadDreams();
+    }
+
+    function loadDreams() {
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      const filter = filterSelect.value;
+      dreamList.innerHTML = "";
+      dreams.forEach((dream, index) => {
+        if (
+          filter === "lucid" && !dream.lucid ||
+          filter === "non-lucid" && dream.lucid
+        ) {
+          return;
+        }
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div>${dream.text}</div>
+          <div class='date'>${dream.date}${dream.lucid ? " 🌟 Rêve lucide" : ""}</div>
+          <button class='delete-btn' onclick='deleteDream(${index})'>Supprimer</button>
+        `;
+        dreamList.appendChild(li);
+      });
+    }
+
+    function deleteDream(index) {
+      if (!confirm("Tu es sûr de vouloir supprimer ce rêve ?")) return;
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      dreams.splice(index, 1);
+      localStorage.setItem("dreams", JSON.stringify(dreams));
+      loadDreams();
+    }
+
+    function confirmDeleteAll() {
+      if (!confirm("Supprimer TOUS les rêves ? Cette action est irréversible.")) return;
+      localStorage.removeItem("dreams");
+      loadDreams();
+    }
+
+    function exportDreams() {
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+      if (dreams.length === 0) {
+        alert("Aucun rêve à exporter !");
+        return;
+      }
+      let content = "Journal de Rêves \n\n";
+      dreams.forEach((dream, index) => {
+        content += `Rêve #${dreams.length - index}\nDate : ${dream.date}${dream.lucid ? " (Lucide)" : ""}\n${dream.text}\n\n`;
+      });
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "journal_de_reves.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
