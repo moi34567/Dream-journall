@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Journal de Rêves avec Dream Patterns</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #111;
+    color: #eee;
+    padding: 2rem;
+    max-width: 700px;
+    margin: auto;
+    position: relative;
+  }
+
+  /* Sidebar */
+  #sidebarToggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background-color: #222;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    color: #eee;
+    font-size: 24px;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+    transition: background-color 0.3s;
+  }
+  #sidebarToggle:hover {
+    background-color: #444;
+  }
+
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    background-color: #222;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.7);
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+    z-index: 1000;
+  }
+  #sidebar.open {
+    left: 0;
+  }
+
+  #sidebar h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: normal;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+  }
+
+  #tagsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  #tagsList li {
+    background-color: #333;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    display: inline-block;
+    user-select: none;
+    color: #ccc;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 0.9rem;
+    position: relative;
+  }
+  #tagsList li.selected {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  #tagsList li .count {
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    color: #222;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 0 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+    display: inline-block;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  /* Main content */
+  #mainApp {
+    padding-left: 0;
+    transition: padding-left 0.3s ease;
+  }
+  #mainApp.sidebar-open {
+    padding-left: 260px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-left: 55px; /* décalage pour ne pas cacher la lune */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h1 span.emoji {
+    font-size: 2rem;
+  }
+
+  .textarea-wrapper {
+    position: relative;
+    margin-top: 1rem;
+  }
+
+  textarea {
+    width: 100%;
+    height: 150px;
+    padding: 1rem;
+    background-color: #222;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-sizing: border-box;
+    resize: vertical;
+    font-size: 1rem;
+  }
+
+  .icon-btn {
+    position: absolute;
+    bottom: 10px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+    fill: #ccc;
+    stroke: #ccc;
+  }
+
+  .icon-btn:hover {
+    opacity: 1;
+  }
+
+  .clear-icon {
+    right: 40px;
+  }
+
+  .micro-icon {
+    right: 10px;
+  }
+
+  button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    margin-top: 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+  }
+
+  button:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+  }
+
+  .delete-btn,
+  .delete-dream-btn,
+  .delete-all-btn {
+    background-color: #e74c3c;
+  }
+
+  .delete-btn:hover,
+  .delete-dream-btn:hover,
+  .delete-all-btn:hover {
+    background-color: #c0392b;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+  }
+
+  li {
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    position: relative;
+    padding-right: 1rem; /* Laisser la place au bouton */
+  }
+
+  li div.date {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-top: 0.5rem;
+  }
+
+  .delete-dream-btn {
+    border: none;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0;
+    clear: none;
+    float: none;
+    display: inline-block;
+  }
+
+  /* Nouveau conteneur pour date + bouton */
+  .date-and-delete {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+
+  label {
+    display: block;
+    margin-top: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  #filterSelect {
+    margin-top: 1rem;
+    background-color: #222;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    font-size: 1rem;
+  }
+
+  /* Scrollbar pour sidebar */
+  #sidebar::-webkit-scrollbar {
+    width: 8px;
+  }
+  #sidebar::-webkit-scrollbar-thumb {
+    background-color: #444;
+    border-radius: 4px;
+  }
+  #sidebar::-webkit-scrollbar-track {
+    background-color: #222;
+  }
+
+  /* Password container */
+  #authContainer {
+    max-width: 300px;
+    margin: 4rem auto;
+    text-align: center;
+  }
+
+  #authContainer input[type="password"] {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #222;
+    color: #eee;
+  }
+
+  #authContainer button {
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  /* Styles pour édition et tronquage */
+  .dream-text {
+    white-space: pre-wrap;
+    cursor: pointer;
+    max-height: 13.5em; /* environ 10 lignes * 1.35em */
+    overflow: hidden;
+    position: relative;
+  }
+  .dream-text.expanded {
+    max-height: none;
+  }
+
+  .see-more-btn {
+    display: inline-block;
+    margin-top: 0.3rem;
+    background: none;
+    border: none;
+    color: #4CAF50;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+  }
+
+  .dream-text[contenteditable="true"] {
+    outline: 2px solid #4CAF50;
+    cursor: text;
+    max-height: none !important;
+  }
+</style>
+</head>
+<body>
+<button id="sidebarToggle" aria-label="Ouvrir/fermer la liste des tags">☰</button>
+
+<div id="sidebar" aria-label="Liste des Dream Patterns (tags)">
+  <h2>Dream Patterns</h2>
+  <ul id="tagsList"></ul>
+
+  <hr style="border-color:#444; margin: 1rem 0;" />
+
+  <h2>Stats</h2>
+  <p>Total rêves : <span id="totalDreams">0</span></p>
+  <p>Rêves lucides : <span id="lucidDreams">0</span> (<span id="lucidPercent">0</span>%)</p>
+  <p>Rêves non lucides : <span id="nonLucidDreams">0</span> (<span id="nonLucidPercent">0</span>%)</p>
+  <canvas id="dreamsChart" width="220" height="120" style="background-color:#222; border-radius:6px;"></canvas>
+</div>
+
+<div id="authContainer">
+  <h2>🔒 Accès sécurisé</h2>
+  <input type="password" id="passwordInput" placeholder="Mot de passe" autocomplete="off" />
+  <button onclick="checkPassword()">Connexion</button>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <h1><span class="emoji">🌙</span> Mon Journal de Rêves</h1>
+
+  <div class="textarea-wrapper">
+    <textarea id="dreamInput" placeholder="Écris ton rêve ici..."></textarea>
+
+    <!-- Croix SVG -->
+    <svg class="icon-btn clear-icon" onclick="clearText()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" >
+      <path d="M18 6L6 18M6 6l12 12" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+
+    <!-- Micro SVG -->
+    <svg class="icon-btn micro-icon" onclick="startDictation()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3zm5 10a5 5 0 01-10 0H5a7 7 0 0014 0h-2zm-5 10v-3" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <label>
+    <input type="checkbox" id="lucidCheckbox" /> 🌟 C'était un rêve lucide
+  </label><br />
+
+  <button onclick="saveDream()">💾 Sauvegarder</button>
+  <button onclick="exportDreams()">📥 Exporter en fichier texte</button>
+  <button onclick="importDreams()">📤 Importer fichier texte</button>
+  <input type="file" id="importFile" accept=".txt" style="display:none;" />
+
+  <button class="delete-all-btn" onclick="confirmDeleteAll()">🗑️ Supprimer tous les rêves</button>
+
+  <h2>Mes Rêves</h2>
+  <label for="filterSelect">🔍 Filtrer :</label>
+  <select id="filterSelect" onchange="loadDreams()">
+    <option value="all">Tous</option>
+    <option value="lucid">Lucides seulement</option>
+    <option value="non-lucid">Non lucides</option>
+  </select>
+  <ul id="dreamList"></ul>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const PASSWORD = "rceavleine1234";
+
+const sidebarToggle = document.getElementById("sidebarToggle");
+const sidebar = document.getElementById("sidebar");
+const mainApp = document.getElementById("mainApp");
+const dreamInput = document.getElementById("dreamInput");
+const lucidCheckbox = document.getElementById("lucidCheckbox");
+const dreamList = document.getElementById("dreamList");
+const filterSelect = document.getElementById("filterSelect");
+const tagsList = document.getElementById("tagsList");
+const importFileInput = document.getElementById("importFile");
+
+let selectedTags = [];
+
+sidebarToggle.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
+  mainApp.classList.toggle("sidebar-open");
+});
+
+function checkPassword() {
+  const input = document.getElementById("passwordInput").value;
+  if (input === PASSWORD) {
+    document.getElementById("authContainer").style.display = "none";
+    mainApp.style.display = "block";
+    loadDreams();
+    loadTags();
+    updateStatsSection();
+  } else {
+    alert("Mot de passe incorrect.");
+  }
+}
+
+function saveDream() {
+  const text = dreamInput.value.trim();
+  const isLucid = lucidCheckbox.checked;
+  if (!text) return;
+
+  const tags = extractTags(text);
+  const date = new Date().toISOString();
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 7);
+
+  const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+  dreams.unshift({ id, text, date, lucid: isLucid, tags });
+  localStorage.setItem("dreams", JSON.stringify(dreams));
+
+  dreamInput.value = "";
+  lucidCheckbox.checked = false;
+  loadDreams();
+  loadTags();
+  updateStatsSection();
+}
+
+function extractTags(text) {
+  const regex = /#(\w+)/g;
+  let match;
+  const tags = [];
+  while ((match = regex.exec(text)) !== null) {
+    tags.push(match[1].toLowerCase());
+  }
+  return tags;
+}
+
+function loadDreams() {
+  const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+  const filter = filterSelect.value;
+
+  dreamList.innerHTML = "";
+
+  let filteredDreams = dreams.filter(dream => {
+    if (filter === "lucid") return dream.lucid;
+    if (filter === "non-lucid") return !dream.lucid;
+    return true;
+  });
+
+  if (selectedTags.length > 0) {
+    filteredDreams = filteredDreams.filter(dream =>
+      selectedTags.every(tag => dream.tags && dream.tags.includes(tag))
+    );
+  }
+
+  filteredDreams.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  filteredDreams.forEach((dream) => {
+    const li = document.createElement("li");
+
+    // Créer div éditable avec texte tronqué
+    const dreamDiv = document.createElement("div");
+    dreamDiv.className = "dream-text";
+    dreamDiv.contentEditable = "false";
+    dreamDiv.innerHTML = escapeHtml(dream.text).replace(/#(\w+)/g, '<span style="color:#4CAF50;">#$1</span>');
+
+    // Bouton voir plus / voir moins
+    const seeMoreBtn = document.createElement("button");
+    seeMoreBtn.className = "see-more-btn";
+    seeMoreBtn.textContent = "Voir plus";
+    seeMoreBtn.style.display = "inline";
+
+    seeMoreBtn.addEventListener("click", () => {
+      const expanded = dreamDiv.classList.toggle("expanded");
+      seeMoreBtn.textContent = expanded ? "Voir moins" : "Voir plus";
+    });
+
+    // Double clic pour éditer
+    dreamDiv.addEventListener("dblclick", () => {
+      dreamDiv.contentEditable = "true";
+      dreamDiv.focus();
+    });
+
+    // Perte du focus => sauvegarder modification texte seulement
+    dreamDiv.addEventListener("blur", () => {
+      dreamDiv.contentEditable = "false";
+      const newText = dreamDiv.textContent.trim();
+      if (newText !== dream.text) {
+        updateDreamText(dream.id, newText);
+      }
+    });
+
+    // Date + Lucide + bouton supprimer dans un container
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "date-and-delete";
+
+    const dateDiv = document.createElement("div");
+    dateDiv.className = "date";
+    const dateObj = new Date(dream.date);
+    dateDiv.textContent = `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString()} - ${dream.lucid ? "Lucide" : "Non lucide"}`;
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "🗑️";
+    deleteBtn.title = "Supprimer ce rêve";
+    deleteBtn.className = "delete-dream-btn";
+    deleteBtn.addEventListener("click", () => deleteDream(dream.id));
+
+    infoDiv.appendChild(dateDiv);
+    infoDiv.appendChild(deleteBtn);
+
+    li.appendChild(dreamDiv);
+    li.appendChild(seeMoreBtn);
+    li.appendChild(infoDiv);
+
+    dreamList.appendChild(li);
+  });
+}
+
+function updateDreamText(id, newText) {
+  const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+  const idx = dreams.findIndex(d => d.id === id);
+  if (idx === -1) return;
+  dreams[idx].text = newText;
+  dreams[idx].tags = extractTags(newText);
+  localStorage.setItem("dreams", JSON.stringify(dreams));
+  loadTags();
+  updateStatsSection();
+}
+
+function deleteDream(id) {
+  if (!confirm("Supprimer ce rêve définitivement ?")) return;
+  let dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+  dreams = dreams.filter(d => d.id !== id);
+  localStorage.setItem("dreams", JSON.stringify(dreams));
+  loadDreams();
+  loadTags();
+  updateStatsSection();
+}
+
+function confirmDeleteAll() {
+  if (!confirm("Supprimer tous les rêves ? Cette action est irréversible.")) return;
+  localStorage.removeItem("dreams");
+  loadDreams();
+  loadTags();
+  updateStatsSection();
+}
+
+function loadTags() {
+  const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+  const tagCounts = {};
+  dreams.forEach(dream => {
+    if (dream.tags) {
+      dream.tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    }
+  });
+
+  tagsList.innerHTML = "";
+
+  const tags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+  tags.forEach(tag => {
+    const li = document.createElement("li");
+    li.textContent = "#" + tag;
+
+    const countSpan = document.createElement("span");
+    countSpan.className = "count";
+    countSpan.textContent = tagCounts[tag];
+    li.appendChild(countSpan);
+
+    li.addEventListener("click", () => {
+      if (selectedTags.includes(tag)) {
+        selectedTags = selectedTags.filter(t => t !== tag);
+        li.classList.remove("selected");
+      } else {
+        selectedTags.push(tag);
+        li.classList.add("selected");
+      }
+      loadDreams();
+    });
+
+    if (selectedTags.includes(tag)) {
+      li.classList.add("selected");
+    }
+
+    tagsList.appendChild(li);
+  });
+}
+
+function exportDreams() {
+  const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+  if (dreams.length === 0) {
+    alert("Aucun rêve à exporter.");
+    return;
+  }
+  let text = "";
+  dreams.forEach(dream => {
+    text += `Date: ${new Date(dream.date).toLocaleString()}\n`;
+    text += `Lucide: ${dream.lucid ? "Oui" : "Non"}\n\n`;
+    text += dream.text + "\n\n---\n\n";
+  });
+
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "reves_export.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importDreams() {
+  importFileInput.click();
+}
+
+importFileInput.addEventListener("change", () => {
+  const file = importFileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    try {
+      // Split by separator ---
+      const rawDreams = text.split(/\n---\s*\n?/).filter(t => t.trim().length > 0);
+      const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+
+      rawDreams.forEach(rawDream => {
+        const lines = rawDream.trim().split('\n');
+        let dateLine = lines.find(line => line.startsWith("Date:"));
+        let lucidLine = lines.find(line => line.startsWith("Lucide:"));
+        if (!dateLine || !lucidLine) throw new Error("Format invalide");
+
+        let dateStr = dateLine.replace("Date:", "").trim();
+        let lucidStr = lucidLine.replace("Lucide:", "").trim().toLowerCase();
+
+        const lucidIndex = lines.indexOf(lucidLine);
+        const textLines = lines.slice(lucidIndex + 2);
+        const dreamText = textLines.join('\n').trim();
+
+        if (!dreamText) return;
+
+        const date = new Date(dateStr);
+        const isoDate = isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+
+        const lucid = (lucidStr === "oui");
+
+        // Ajouter un id unique
+        const id = Date.now().toString() + Math.random().toString(36).substring(2,7);
+
+        // Vérifier doublon par texte + date
+        if (!dreams.some(d => d.text === dreamText && d.date === isoDate)) {
+          const tags = extractTags(dreamText);
+          dreams.push({ id, text: dreamText, date: isoDate, lucid, tags });
+        }
+      });
+
+      // Trier par date décroissante après import
+      dreams.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+      localStorage.setItem("dreams", JSON.stringify(dreams));
+      loadDreams();
+      loadTags();
+      updateStatsSection();
+      alert("Importation réussie !");
+    } catch (err) {
+      alert("Fichier importé invalide.");
+    }
+  };
+  reader.readAsText(file);
+  importFileInput.value = "";
+});
+
+// Sécuriser l'affichage HTML pour éviter injection
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Stats (total, lucides %, etc)
+function calculateStats() {
+  const dreams = JSON.parse(localStorage.getItem("dreams") || "[]");
+
+  const total = dreams.length;
+  const lucidCount = dreams.filter(d => d.lucid).length;
+  const nonLucidCount = total - lucidCount;
+
+  // Rêves par mois ex : "2025-07"
+  const monthsCount = {};
+  dreams.forEach(d => {
+    const date = new Date(d.date);
+    const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    monthsCount[key] = (monthsCount[key] || 0) + 1;
+  });
+
+  return { total, lucidCount, nonLucidCount, monthsCount };
+}
+
+function updateStatsSection() {
+  const stats = calculateStats();
+
+  document.getElementById('totalDreams').textContent = stats.total;
+  document.getElementById('lucidDreams').textContent = stats.lucidCount;
+  document.getElementById('nonLucidDreams').textContent = stats.nonLucidCount;
+
+  const lucidPercent = stats.total === 0 ? 0 : ((stats.lucidCount / stats.total) * 100).toFixed(1);
+  const nonLucidPercent = stats.total === 0 ? 0 : ((stats.nonLucidCount / stats.total) * 100).toFixed(1);
+
+  document.getElementById('lucidPercent').textContent = lucidPercent;
+  document.getElementById('nonLucidPercent').textContent = nonLucidPercent;
+
+  renderChart(stats.monthsCount);
+}
+
+function renderChart(monthsCount) {
+  const ctx = document.getElementById('dreamsChart').getContext('2d');
+
+  if(window.dreamsChartInstance) {
+    window.dreamsChartInstance.destroy();
+  }
+
+  const labels = Object.keys(monthsCount).sort();
+  const data = labels.map(label => monthsCount[label]);
+
+  window.dreamsChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Rêves par mois',
+        data,
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          precision: 0,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#eee',
+            font: { size: 14 }
+          }
+        }
+      },
+      responsive: false,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+// Dictée vocale simplifiée
+function startDictation() {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert("La reconnaissance vocale n'est pas supportée sur ce navigateur.");
+    return;
+  }
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'fr-FR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    dreamInput.value += (dreamInput.value ? "\n" : "") + transcript;
+  };
+
+  recognition.onerror = function() {
+    alert("Erreur lors de la reconnaissance vocale.");
+  };
+
+  recognition.start();
+}
+
+function clearText() {
+  dreamInput.value = "";
+}
+
+// Initialisation au chargement
+window.addEventListener("load", () => {
+  // Si pas encore connecté, afficher login sinon app
+  if (document.getElementById("authContainer").style.display !== "none") {
+    mainApp.style.display = "none";
+  }
+});
+</script>
+</body>
+</html>
