@@ -323,16 +323,17 @@ label {
 <button id="sidebarToggle" aria-label="Ouvrir/fermer la liste des tags">☰</button>
 
 <div id="sidebar" aria-label="Liste des Dream Patterns (tags)">
-  <h2>Dream Patterns</h2>
-  <ul id="tagsList"></ul>
-
-  <hr style="border-color:#444; margin: 1rem 0;" />
-
+  
   <h2>Stats</h2>
   <p>Total rêves : <span id="totalDreams">0</span></p>
   <p>Rêves lucides : <span id="lucidDreams">0</span> (<span id="lucidPercent">0</span>%)</p>
   <p>Rêves non lucides : <span id="nonLucidDreams">0</span> (<span id="nonLucidPercent">0</span>%)</p>
   <canvas id="dreamsChart" width="220" height="120" style="background-color:#222; border-radius:6px;"></canvas>
+  <h2>Dream Patterns</h2>
+  <ul id="tagsList"></ul>
+
+  <hr style="border-color:#444; margin: 1rem 0;" />
+
 </div>
 
 <div id="authContainer">
@@ -509,7 +510,7 @@ function loadDreams() {
     dateDiv.textContent = `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString()} - ${dream.lucid ? "Lucide" : "Non lucide"}`;
 
     const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "🗑️";
+    deleteBtn.textContent = "suprimer";
     deleteBtn.title = "Supprimer ce rêve";
     deleteBtn.className = "delete-dream-btn";
     deleteBtn.addEventListener("click", () => deleteDream(dream.id));
