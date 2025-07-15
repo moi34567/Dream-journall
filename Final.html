@@ -383,6 +383,28 @@ label {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+// --- NOTIFICATIONS SYSTEME ---
+// Icône lune en data URI (emoji SVG)
+const moonIcon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><text x='0' y='52' font-size='64'>🌙</text></svg>";
+
+function showNotification(message, iconUrl) {
+  if (!("Notification" in window)) {
+    // Fallback (optionnel)
+    return;
+  }
+  if (Notification.permission === "granted") {
+    new Notification(message, { icon: iconUrl });
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        new Notification(message, { icon: iconUrl });
+      }
+    });
+  }
+}
+
+// --- FIN NOTIFICATIONS SYSTEME ---
+
 const PASSWORD = "rceavleine1234";
 
 const sidebarToggle = document.getElementById("sidebarToggle");
@@ -410,6 +432,8 @@ function checkPassword() {
     loadDreams();
     loadTags();
     updateStatsSection();
+    // --- Notif connexion : "Es-tu en train de rêver ?" ---
+    showNotification("Es-tu en train de rêver ?", moonIcon);
   } else {
     alert("Mot de passe incorrect.");
   }
@@ -433,6 +457,8 @@ function saveDream() {
   loadDreams();
   loadTags();
   updateStatsSection();
+  // --- Notif rêve sauvegardé ---
+  showNotification("Votre rêve a bien été sauvegardé.", moonIcon);
 }
 
 function extractTags(text) {
@@ -545,6 +571,8 @@ function deleteDream(id) {
   loadDreams();
   loadTags();
   updateStatsSection();
+  // --- Notif rêve supprimé ---
+  showNotification("Votre rêve a bien été supprimé.", moonIcon);
 }
 
 function confirmDeleteAll() {
@@ -807,4 +835,4 @@ window.addEventListener("load", () => {
 });
 </script>
 </body>
-</html>
+  </html>
