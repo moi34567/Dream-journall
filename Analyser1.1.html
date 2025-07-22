@@ -48,25 +48,51 @@
 
   <script>
     function genererCommentaire(texte) {
-      const texteLower = texte.toLowerCase();
+  const texteLower = texte.toLowerCase();
+  const contientMot = (mot) => new RegExp("\\b" + mot + "\\b", "i").test(texte);
 
-      // Mots clés bien ciblés (regex pour éviter les faux positifs)
-      const contientMot = (mot) => new RegExp("\\b" + mot + "\\b", "i").test(texte);
+  if (contientMot("vol")) return "🕊️ Tu adores prendre de la hauteur on dirait.";
+  if (contientMot("école")) return "📚 Un rêve scolaire... tu révises même la nuit ?!";
+  if (contientMot("eau")) return "🌊 L’eau, symbole d’émotion profonde... intéressant.";
+  if (contientMot("poursuite")) return "🏃‍♂️ Tu fuis quelque chose ? Ou quelqu’un ?";
+  if (contientMot("lucide") || texteLower.includes("je rêve")) return "🧠 Rêve lucide détecté... encore un point pour l'armée des rêveurs.";
+  if (texteLower.includes("test de réalité")) return "🔍 Test de réalité activé, bonne habitude ! Bientôt tu les feras même en plein concert.";
+  if (contientMot("main") || contientMot("mains")) return "🖐️ Tu testes la réalité comme un pro, continue comme ça.";
+  if (contientMot("réveillé") || contientMot("réveil")) return "⏰ Zut... ça sent le réveil précoce. Il faudra stabiliser un peu plus la prochaine fois.";
+  if (texteLower.includes("salle à manger") || texteLower.includes("maison")) return "🏠 Les lieux familiers sont tes portails oniriques préférés on dirait.";
+  if (texteLower.includes("incontrôlable") || texteLower.includes("perdu") || texteLower.includes("bug")) return "🌀 On dirait que le rêve t'a glissé entre les doigts. Mais c'est comme ça qu'on apprend !";
+  if (contientMot("peur") || contientMot("angoisse") || contientMot("cauchemar")) return "🌑 Un peu sombre, mais même ça peut devenir un rêve lucide épique.";
+  if (texteLower.includes("apocalypse")) return "🌪️ Ça sent le chaos et la fin du monde, un rêve puissant !";
+  if (texteLower.includes("ski")) return "⛷️ La vitesse et le froid, ça décoiffe dans tes rêves !";
+  if (texteLower.includes("moto")) return "🏍️ Sensations fortes au rendez-vous, tu es un aventurier nocturne.";
+  if (texteLower.includes("policier")) return "🚓 Attention, la loi onirique est sévère… mais tu gères la fuite !";
+  if (texteLower.includes("course") || texteLower.includes("coursepoursuite")) return "🏁 Une course effrénée, ça carbure dans tes rêves !";
+  if (texteLower.includes("kung fu") || texteLower.includes("combat")) return "🥋 Maîtrise et agilité, tu es un vrai ninja dans tes rêves.";
+  if (texteLower.includes("parachute")) return "🪂 L’adrénaline est ton moteur même en dormant.";
+  if (texteLower.includes("escalade")) return "🧗‍♂️ Tu grimpes haut, entre défi et maîtrise, un vrai alpiniste du monde onirique !";
+  if (texteLower.includes("voyage temporel")) return "⏳ Voyageur du temps, tu explores les époques comme un pro.";
+  if (texteLower.includes("sensationsfortes")) return "⚡ L’adrénaline est à fond, tu repousses les limites même en dormant.";
+  if (texteLower.includes("déjà vu") || texteLower.includes("dejavu") || texteLower.includes("deja vu")) return "🔄 Ce sentiment de boucle, ton rêve te fait tourner en rond.";
+  if (texteLower.includes("semi lucide") || texteLower.includes("semilucide")) return "🌗 Entre rêve et réalité, tu navigues sur un fil très fin.";
+  if (texteLower.includes("surnaturel") || texteLower.includes("magie")) return "✨ Un soupçon de mystère et d’étrange, ça pimente tes nuits.";
+  if (texteLower.includes("dejaVu")) return "🔄 Ce sentiment de déjà vu, ton subconscient te joue des tours.";
+  if (texteLower.includes("action")) return "🎬 Ça sent le film d’action, tu es le héros de tes nuits !";
+  if (texteLower.includes("plage")) return "🏖️ Douceur et liberté, la plage t’invite à la détente onirique.";
+  if (texteLower.includes("mer")) return "🌊 Immense et profond, comme ton esprit qui s’explore.";
+  if (texteLower.includes("disparition")) return "🕵️‍♂️ Mystère et suspense, un bon thriller onirique.";
+  if (texteLower.includes("teleportation")) return "⚡ Téléportation activée, ça décoiffe dans tes rêves !";
+  if (texteLower.includes("mutations")) return "🧬 Métamorphoses à gogo, tu joues avec la matière onirique.";
+  if (texteLower.includes("robots")) return "🤖 Les machines s’invitent, futur et technologie mêlés dans tes rêves.";
+  if (texteLower.includes("jeu") || texteLower.includes("amusement")) return "🎲 Un peu de fun, ça fait du bien même en rêve.";
 
-      if (contientMot("vol")) return "🕊️ Tu adores prendre de la hauteur on dirait.";
-      if (contientMot("college")) return "📚 Un rêve scolaire... tu révises même la nuit ?!";
-      if (contientMot("eau")) return "🌊 L’eau, symbole d’émotion profonde... intéressant.";
-      if (contientMot("poursuite")) return "🏃‍♂️ Tu fuis quelque chose ? Ou quelqu’un ?";
-      if (contientMot("lucide") || texteLower.includes("je rêve")) return "🧠 Rêve lucide détecté... encore un point pour l'armée des rêveurs.";
-      if (texteLower.includes("test de réalité")) return "🔍 Test de réalité activé, bonne habitude ! Bientôt tu les feras même en plein concert.";
-      if (contientMot("main") || contientMot("mains")) return "🖐️ Tu testes la réalité comme un pro, continue comme ça.";
-      if (contientMot("réveillé") || contientMot("réveil")) return "⏰ Zut... ça sent le réveil précoce. Il faudra stabiliser un peu plus la prochaine fois.";
-      if (texteLower.includes("salle à manger") || texteLower.includes("maison")) return "🏠 Les lieux familiers sont tes portails oniriques préférés on dirait.";
-      if (texteLower.includes("incontrôlable") || texteLower.includes("perdu") || texteLower.includes("bug")) return "🌀 On dirait que le rêve t'a glissé entre les doigts. Mais c'est comme ça qu'on apprend !";
-      if (contientMot("peur") || contientMot("angoisse") || contientMot("cauchemar")) return "🌑 Un peu sombre, mais même ça peut devenir un rêve lucide épique.";
+  // Ajout spécial pour "sans un bruit" ou #sansUnBruit (sans casse)
+  if (texteLower.includes("sans un bruit") || texteLower.includes("sansunbruit")) {
+    return "🤫 Silence total, l’atmosphère est à la discrétion... un vrai film d’espionnage nocturne.";
+  }
 
-      return "🌙 Un rêve mystérieux... ton subconscient a bien des secrets.";
-    }
+  return "🌙 Un rêve mystérieux... ton subconscient a bien des secrets.";
+}
+
 
     function analyserReves() {
       const resultats = document.getElementById("resultats");
