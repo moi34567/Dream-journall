@@ -49,11 +49,22 @@
   <script>
     function genererCommentaire(texte) {
       const texteLower = texte.toLowerCase();
-      if (texteLower.includes("vol")) return "🕊️ Tu adores prendre de la hauteur on dirait.";
-      if (texteLower.includes("école")) return "📚 Un rêve scolaire... tu révises même la nuit ?!";
-      if (texteLower.includes("eau")) return "🌊 L’eau, symbole d’émotion profonde... intéressant.";
-      if (texteLower.includes("poursuite")) return "🏃‍♂️ Tu fuis quelque chose ? Ou quelqu’un ?";
-      if (texteLower.includes("lucide")) return "🧠 Tu deviens vraiment un pro du rêve lucide.";
+
+      // Mots clés bien ciblés (regex pour éviter les faux positifs)
+      const contientMot = (mot) => new RegExp("\\b" + mot + "\\b", "i").test(texte);
+
+      if (contientMot("vol")) return "🕊️ Tu adores prendre de la hauteur on dirait.";
+      if (contientMot("college")) return "📚 Un rêve scolaire... tu révises même la nuit ?!";
+      if (contientMot("eau")) return "🌊 L’eau, symbole d’émotion profonde... intéressant.";
+      if (contientMot("poursuite")) return "🏃‍♂️ Tu fuis quelque chose ? Ou quelqu’un ?";
+      if (contientMot("lucide") || texteLower.includes("je rêve")) return "🧠 Rêve lucide détecté... encore un point pour l'armée des rêveurs.";
+      if (texteLower.includes("test de réalité")) return "🔍 Test de réalité activé, bonne habitude ! Bientôt tu les feras même en plein concert.";
+      if (contientMot("main") || contientMot("mains")) return "🖐️ Tu testes la réalité comme un pro, continue comme ça.";
+      if (contientMot("réveillé") || contientMot("réveil")) return "⏰ Zut... ça sent le réveil précoce. Il faudra stabiliser un peu plus la prochaine fois.";
+      if (texteLower.includes("salle à manger") || texteLower.includes("maison")) return "🏠 Les lieux familiers sont tes portails oniriques préférés on dirait.";
+      if (texteLower.includes("incontrôlable") || texteLower.includes("perdu") || texteLower.includes("bug")) return "🌀 On dirait que le rêve t'a glissé entre les doigts. Mais c'est comme ça qu'on apprend !";
+      if (contientMot("peur") || contientMot("angoisse") || contientMot("cauchemar")) return "🌑 Un peu sombre, mais même ça peut devenir un rêve lucide épique.";
+
       return "🌙 Un rêve mystérieux... ton subconscient a bien des secrets.";
     }
 
