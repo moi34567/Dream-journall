@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bot Commentateur de Rêves</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 1rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+    }
+    button {
+      display: block;
+      margin: 1rem auto;
+      padding: 0.5rem 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .dream {
+      background-color: #222;
+      border-left: 4px solid #4CAF50;
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .comment {
+      margin-top: 0.5rem;
+      font-style: italic;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bot Commentateur de Rêves</h1>
+  <button onclick="analyserReves()">Analyser mes rêves</button>
+  <div id="resultats"></div>
+
+  <script>
+    function genererCommentaire(texte) {
+      const texteLower = texte.toLowerCase();
+      if (texteLower.includes("vol")) return "🕊️ Tu adores prendre de la hauteur on dirait.";
+      if (texteLower.includes("école")) return "📚 Un rêve scolaire... tu révises même la nuit ?!";
+      if (texteLower.includes("eau")) return "🌊 L’eau, symbole d’émotion profonde... intéressant.";
+      if (texteLower.includes("poursuite")) return "🏃‍♂️ Tu fuis quelque chose ? Ou quelqu’un ?";
+      if (texteLower.includes("lucide")) return "🧠 Tu deviens vraiment un pro du rêve lucide.";
+      return "🌙 Un rêve mystérieux... ton subconscient a bien des secrets.";
+    }
+
+    function analyserReves() {
+      const resultats = document.getElementById("resultats");
+      resultats.innerHTML = "";
+      let dreamsData;
+      try {
+        dreamsData = JSON.parse(localStorage.getItem("dreams"));
+      } catch (e) {
+        resultats.innerHTML = "<p>Erreur : impossible de lire les rêves.</p>";
+        return;
+      }
+
+      if (!dreamsData || dreamsData.length === 0) {
+        resultats.innerHTML = "<p>Aucun rêve trouvé dans le localStorage.</p>";
+        return;
+      }
+
+      dreamsData.forEach(dream => {
+        const container = document.createElement("div");
+        container.className = "dream";
+
+        const p = document.createElement("p");
+        p.textContent = dream.text || "[Rêve sans contenu]";
+
+        const c = document.createElement("div");
+        c.className = "comment";
+        c.textContent = genererCommentaire(dream.text || "");
+
+        container.appendChild(p);
+        container.appendChild(c);
+        resultats.appendChild(container);
+      });
+    }
+  </script>
+</body>
+</html>
