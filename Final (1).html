@@ -834,9 +834,27 @@ function startDictation() {
 function clearText() {
   dreamInput.value = "";
 }
+// Gestion des objectifs
+function saveObjectivesToLocalStorage() {
+  const objectives = {};
+  document.querySelectorAll('#objectivesList input[type="checkbox"]').forEach(checkbox => {
+    objectives[checkbox.dataset.id] = checkbox.checked;
+  });
+  localStorage.setItem('objectives', JSON.stringify(objectives));
+}
+
+function loadObjectivesFromLocalStorage() {
+  const savedObjectives = JSON.parse(localStorage.getItem('objectives') || '{}');
+  document.querySelectorAll('#objectivesList input[type="checkbox"]').forEach(checkbox => {
+    const id = checkbox.dataset.id;
+    if (savedObjectives[id]) checkbox.checked = true;
+    checkbox.addEventListener('change', saveObjectivesToLocalStorage);
+  });
+}
 
 // Initialisation au chargement
 window.addEventListener("load", () => {
+  loadObjectivesFromLocalStorage();
   // Si pas encore connecté, afficher login sinon app
   if (document.getElementById("authContainer").style.display !== "none") {
     mainApp.style.display = "none";
